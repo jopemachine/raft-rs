@@ -17,6 +17,7 @@
 use std::cmp;
 use std::ops::{Deref, DerefMut};
 
+use crate::derializer::format_message;
 use crate::eraftpb::{
     ConfChange, ConfChangeV2, ConfState, Entry, EntryType, HardState, Message, MessageType,
     Snapshot,
@@ -615,7 +616,7 @@ impl<T: Storage> RaftCore<T> {
             "Sending from {from} to {to}",
             from = self.id,
             to = m.to;
-            "msg" => ?m,
+            "msg" => format_message(&m),
         );
         if m.from == INVALID_ID {
             m.from = self.id;

@@ -505,6 +505,8 @@ macro_rules! fatal {
 
 mod confchange;
 mod config;
+#[allow(missing_docs)]
+pub mod derializer;
 mod errors;
 mod log_unstable;
 mod quorum;
