@@ -22,6 +22,7 @@ use slog::Logger;
 use slog::{debug, info, trace};
 
 use crate::config::Config;
+use crate::derializer::format_entry;
 use crate::eraftpb::{Entry, Snapshot};
 use crate::errors::{Error, Result, StorageError};
 use crate::log_unstable::Unstable;
@@ -374,7 +375,7 @@ impl<T: Storage> RaftLog<T> {
         trace!(
             self.unstable.logger,
             "Entries being appended to unstable list";
-            "ents" => ?ents,
+            "ents" => ents.iter().map(|e| format_entry(e)).collect::<Vec<String>>().join(", "),
         );
         if ents.is_empty() {
             return self.last_index();
