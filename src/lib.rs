@@ -556,6 +556,7 @@ pub mod prelude {
 
     pub use crate::config::Config;
     pub use crate::raft::Raft;
+    pub use crate::derializer;
 
     pub use crate::storage::{RaftState, Storage};
 
