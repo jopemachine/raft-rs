@@ -22,7 +22,7 @@ You can use [`RawNode::new`] to create the Raft node. To create the Raft node, y
 provide a [`Storage`] component, and a [`Config`] to the [`RawNode::new`] function.
 
 ```rust
-use raft::{
+use jopemachine_raft::{
     Config,
     storage::MemStorage,
     raw_node::RawNode,
