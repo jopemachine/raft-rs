@@ -16,7 +16,7 @@
 
 use std::collections::HashMap;
 
-use raft::{
+use jopemachine_raft::{
     eraftpb::{ConfState, Message, MessageType},
     storage::MemStorage,
     Config, Raft, Result, NO_LIMIT,

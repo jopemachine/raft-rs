@@ -15,9 +15,9 @@
 // limitations under the License.
 
 use harness::*;
-use raft::eraftpb::*;
-use raft::storage::MemStorage;
-use raft::*;
+use jopemachine_raft::eraftpb::*;
+use jopemachine_raft::storage::MemStorage;
+use jopemachine_raft::*;
 use raft_proto::ConfChangeI;
 use slog::Logger;
 

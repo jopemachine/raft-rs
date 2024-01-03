@@ -20,9 +20,9 @@ use std::panic::{self, AssertUnwindSafe};
 
 use harness::*;
 use protobuf::Message as PbMessage;
-use raft::eraftpb::*;
-use raft::storage::{GetEntriesContext, MemStorage};
-use raft::*;
+use jopemachine_raft::eraftpb::*;
+use jopemachine_raft::storage::{GetEntriesContext, MemStorage};
+use jopemachine_raft::*;
 use raft_proto::*;
 use slog::Logger;
 
@@ -5431,7 +5431,7 @@ fn test_uncommitted_entries_size_limit() {
 
     // then next proposal should be dropped
     let result = nt.dispatch([msg]);
-    assert_eq!(result.unwrap_err(), raft::Error::ProposalDropped);
+    assert_eq!(result.unwrap_err(), jopemachine_raft::Error::ProposalDropped);
 
     // but entry with empty size should be accepted
     let entry = Entry::default();
@@ -5498,7 +5498,7 @@ fn test_uncommitted_entry_after_leader_election() {
     // uncommitted log size should be 0 on node2,
     // because we set uncommitted size to 0 rather than re-computing it,
     // which means max_uncommitted_size is a soft limit
-    assert_eq!(nt.peers.get_mut(&2).unwrap().state, raft::StateRole::Leader);
+    assert_eq!(nt.peers.get_mut(&2).unwrap().state, jopemachine_raft::StateRole::Leader);
     assert_eq!(nt.peers.get_mut(&2).unwrap().uncommitted_size(), 0);
 }
 
@@ -5534,7 +5534,7 @@ fn test_uncommitted_state_advance_ready_from_last_term() {
     // now node2 has 2 committed entries
     // make node2 leader
     nt.send(vec![new_message(2, 2, MessageType::MsgHup, 0)]);
-    assert_eq!(nt.peers.get_mut(&2).unwrap().state, raft::StateRole::Leader);
+    assert_eq!(nt.peers.get_mut(&2).unwrap().state, jopemachine_raft::StateRole::Leader);
 
     nt.isolate(2);
     // create one uncommitted entry

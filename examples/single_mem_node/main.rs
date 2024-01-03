@@ -6,9 +6,9 @@ use std::sync::mpsc::{self, RecvTimeoutError};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use raft::eraftpb::ConfState;
-use raft::prelude::*;
-use raft::storage::MemStorage;
+use jopemachine_raft::eraftpb::ConfState;
+use jopemachine_raft::prelude::*;
+use jopemachine_raft::storage::MemStorage;
 
 use slog::{info, o};
 

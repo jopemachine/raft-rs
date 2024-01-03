@@ -12,8 +12,8 @@ use std::time::{Duration, Instant};
 use std::{str, thread};
 
 use protobuf::Message as PbMessage;
-use raft::storage::MemStorage;
-use raft::{prelude::*, StateRole};
+use jopemachine_raft::storage::MemStorage;
+use jopemachine_raft::{prelude::*, StateRole};
 use regex::Regex;
 
 use slog::{error, info, o};

@@ -16,9 +16,9 @@
 
 use harness::Network;
 use protobuf::{Message as PbMessage, ProtobufEnum as _};
-use raft::eraftpb::*;
-use raft::storage::{GetEntriesContext, MemStorage};
-use raft::*;
+use jopemachine_raft::eraftpb::*;
+use jopemachine_raft::storage::{GetEntriesContext, MemStorage};
+use jopemachine_raft::*;
 use raft_proto::*;
 use slog::Logger;
 
