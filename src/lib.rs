@@ -506,7 +506,7 @@ macro_rules! fatal {
 mod confchange;
 mod config;
 #[allow(missing_docs)]
-pub mod derializer;
+pub mod deserializer;
 mod errors;
 mod log_unstable;
 mod quorum;
@@ -557,7 +557,7 @@ pub mod prelude {
 
     pub use crate::config::Config;
     pub use crate::raft::Raft;
-    pub use crate::derializer;
+    pub use crate::deserializer;
 
     pub use crate::storage::{RaftState, Storage};
 

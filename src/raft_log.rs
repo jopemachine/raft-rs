@@ -22,7 +22,7 @@ use slog::Logger;
 use slog::{debug, info, trace};
 
 use crate::config::Config;
-use crate::derializer::format_entry;
+use crate::deserializer::format_entry;
 use crate::eraftpb::{Entry, Snapshot};
 use crate::errors::{Error, Result, StorageError};
 use crate::log_unstable::Unstable;

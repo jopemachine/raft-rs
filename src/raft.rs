@@ -17,7 +17,7 @@
 use std::cmp;
 use std::ops::{Deref, DerefMut};
 
-use crate::derializer::format_message;
+use crate::deserializer::format_message;
 use crate::eraftpb::{
     ConfChange, ConfChangeV2, ConfState, Entry, EntryType, HardState, Message, MessageType,
     Snapshot,
