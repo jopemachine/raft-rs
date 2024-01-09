@@ -3,7 +3,7 @@ use raft_proto::prelude::{ConfChange, ConfChangeV2, Message, Snapshot};
 use std::sync::{Arc, RwLock};
 
 lazy_static! {
-    static ref DESERIALIZER: RwLock<Arc<dyn CustomDeserializer + Send + Sync>> =
+    pub static ref DESERIALIZER: RwLock<Arc<dyn CustomDeserializer + Send + Sync>> =
         RwLock::new(Arc::new(DefaultDeserializer));
 }
 
@@ -65,12 +65,12 @@ impl CustomDeserializer for DefaultDeserializer {}
 
 /// Sample Docs
 pub fn format_entry(entry: &Entry) -> String {
-    let derializer = DESERIALIZER.read().unwrap();
+    let deserializer = DESERIALIZER.read().unwrap();
 
     format!(
         "Entry {{ context: {context:}, data: {data:}, entry_type: {entry_type:?}, index: {index:}, sync_log: {sync_log:}, term: {term:} }}",
-        data=derializer.entry_data_deserialize(&entry.data.clone().into()),
-        context=derializer.entry_context_deserialize(&entry.context.clone().into()),
+        data=deserializer.entry_data_deserialize(&entry.data.clone().into()),
+        context=deserializer.entry_context_deserialize(&entry.context.clone().into()),
         entry_type=entry.get_entry_type(),
         index=entry.get_index(),
         sync_log=entry.get_sync_log(),
@@ -80,43 +80,43 @@ pub fn format_entry(entry: &Entry) -> String {
 
 /// Sample Docs
 pub fn format_confchange(cc: &ConfChange) -> String {
-    let derializer = DESERIALIZER.read().unwrap();
+    let deserializer = DESERIALIZER.read().unwrap();
 
     format!(
         "ConfChange {{ change_type: {change_type:?}, node_id: {node_id:}, context: {context:}, id: {id:} }}",
         change_type = cc.get_change_type(),
         node_id = cc.get_node_id(),
         id = cc.get_id(),
-        context = derializer.confchange_context_deserialize(&cc.context.clone().into())
+        context = deserializer.confchange_context_deserialize(&cc.context.clone().into())
     )
 }
 
 /// Sample Docs
 pub fn format_confchangev2(cc: &ConfChangeV2) -> String {
-    let derializer = DESERIALIZER.read().unwrap();
+    let deserializer = DESERIALIZER.read().unwrap();
 
     format!(
         "ConfChangeV2 {{ transition: {transition:?}, changes: {changes:?}, context: {context:} }}",
         transition = cc.transition,
         changes = cc.changes,
-        context = derializer.confchangev2_context_deserialize(&cc.context.clone().into())
+        context = deserializer.confchangev2_context_deserialize(&cc.context.clone().into())
     )
 }
 
 /// Sample Docs
 pub fn format_snapshot(snapshot: &Snapshot) -> String {
-    let derializer = DESERIALIZER.read().unwrap();
+    let deserializer = DESERIALIZER.read().unwrap();
 
     format!(
         "Snapshot {{ data: {data:}, metadata: {metadata:?} }}",
-        data = derializer.snapshot_data_deserializer(&snapshot.data.clone().into()),
+        data = deserializer.snapshot_data_deserializer(&snapshot.data.clone().into()),
         metadata = snapshot.metadata,
     )
 }
 
 /// Sample Docs
 pub fn format_message(msg: &Message) -> String {
-    let derializer = DESERIALIZER.read().unwrap();
+    let deserializer = DESERIALIZER.read().unwrap();
 
     format!(
         "Message {{ msg_type: {msg_type:?}, to: {to:}, from: {from:}, term: {term:}, log_term: {log_term:}, index: {index:}, entries: [{entries:}], commit: {commit:}, commit_term: {commit_term:}, snapshot: {snapshot:}, request_snapshot: {request_snapshot:}, reject: {reject:}, reject_hint: {reject_hint:}, context: {context:}, deprecated_priority: {deprecated_priority:}, priority: {priority:} }}",
@@ -133,7 +133,7 @@ pub fn format_message(msg: &Message) -> String {
         request_snapshot=msg.get_request_snapshot(),
         reject=msg.get_reject(),
         reject_hint=msg.get_reject_hint(),
-        context=derializer.message_context_deserializer(&msg.context.clone().into()),
+        context=deserializer.message_context_deserializer(&msg.context.clone().into()),
         deprecated_priority=msg.get_deprecated_priority(),
         priority=msg.get_priority(),
     )

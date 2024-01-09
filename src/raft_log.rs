@@ -19,7 +19,7 @@ use std::cmp;
 use slog::warn;
 use slog::Logger;
 
-use crate::derializer::format_entry;
+use crate::deserializer::format_entry;
 use crate::eraftpb::{Entry, Snapshot};
 use crate::errors::{Error, Result, StorageError};
 use crate::log_unstable::Unstable;
