@@ -19,9 +19,9 @@ use std::cmp;
 use slog::warn;
 use slog::Logger;
 
-use crate::deserializer::format_entry;
 use crate::eraftpb::{Entry, Snapshot};
 use crate::errors::{Error, Result, StorageError};
+use crate::formatter::format_entry;
 use crate::log_unstable::Unstable;
 use crate::storage::{GetEntriesContext, GetEntriesFor, Storage};
 use crate::util;

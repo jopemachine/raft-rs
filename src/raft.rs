@@ -18,11 +18,11 @@ use std::cmp;
 use std::convert::TryFrom;
 use std::ops::{Deref, DerefMut};
 
-use crate::deserializer::format_message;
 use crate::eraftpb::{
     ConfChange, ConfChangeV2, ConfState, Entry, EntryType, HardState, Message, MessageType,
     Snapshot,
 };
+use crate::formatter::format_message;
 use protobuf::Message as _;
 use raft_proto::ConfChangeI;
 use rand::{self, Rng};

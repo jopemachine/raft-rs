@@ -504,9 +504,9 @@ macro_rules! fatal {
 
 mod confchange;
 mod config;
-#[allow(missing_docs)]
-pub mod deserializer;
 mod errors;
+#[allow(missing_docs)]
+pub mod formatter;
 mod log_unstable;
 mod quorum;
 mod raft;
@@ -555,7 +555,7 @@ pub mod prelude {
     pub use raft_proto::prelude::*;
 
     pub use crate::config::Config;
-    pub use crate::deserializer;
+    pub use crate::formatter;
     pub use crate::raft::Raft;
 
     pub use crate::storage::{RaftState, Storage};
