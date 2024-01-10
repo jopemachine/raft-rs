@@ -11,9 +11,9 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use std::{str, thread};
 
-use protobuf::Message as PbMessage;
 use jopemachine_raft::storage::MemStorage;
 use jopemachine_raft::{prelude::*, StateRole};
+use protobuf::Message as PbMessage;
 use regex::Regex;
 
 use slog::{error, info, o};
