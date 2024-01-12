@@ -17,9 +17,11 @@
 use std::cmp;
 use std::collections::HashMap;
 use std::panic::{self, AssertUnwindSafe};
+use std::sync::Arc;
 
 use harness::*;
 use jopemachine_raft::eraftpb::*;
+use jopemachine_raft::logger::Slogger;
 use jopemachine_raft::storage::{GetEntriesContext, MemStorage};
 use jopemachine_raft::*;
 use protobuf::Message as PbMessage;
@@ -4407,7 +4409,13 @@ fn test_prevote_with_check_quorum() {
 fn test_new_raft_with_bad_config_errors() {
     let invalid_config = new_test_config(INVALID_ID, 1, 1);
     let s = MemStorage::new_with_conf_state((vec![1, 2], vec![]));
-    let raft = Raft::new(&invalid_config, s, &default_logger());
+    let raft = Raft::new(
+        &invalid_config,
+        s,
+        Arc::new(Slogger {
+            slog: default_logger(),
+        }),
+    );
     assert!(raft.is_err())
 }
 

@@ -24,7 +24,7 @@ pub const NO_LIMIT: u64 = u64::MAX;
 /// # Examples
 ///
 /// ```
-/// use raft::{util::limit_size, prelude::*};
+/// use jopemachine_raft::{util::limit_size, prelude::*};
 ///
 /// let template = {
 ///     let mut entry = Entry::default();

@@ -14,8 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::Arc;
+
 use harness::*;
 use jopemachine_raft::eraftpb::*;
+use jopemachine_raft::logger::Slogger;
 use jopemachine_raft::storage::MemStorage;
 use jopemachine_raft::*;
 use raft_proto::ConfChangeI;
@@ -107,7 +110,7 @@ pub fn new_test_raft_with_logs(
 }
 
 pub fn new_test_raft_with_config(config: &Config, storage: MemStorage, l: &Logger) -> Interface {
-    Interface::new(Raft::new(config, storage, l).unwrap())
+    Interface::new(Raft::new(config, storage, Arc::new(Slogger { slog: l.clone() })).unwrap())
 }
 
 pub fn hard_state(term: u64, commit: u64, vote: u64) -> HardState {

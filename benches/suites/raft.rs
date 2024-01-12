@@ -1,8 +1,11 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
+use std::sync::Arc;
+
 use crate::DEFAULT_RAFT_SETS;
 use criterion::Criterion;
 use jopemachine_raft::eraftpb::ConfState;
+use jopemachine_raft::logger::Slogger;
 use jopemachine_raft::{storage::MemStorage, Config, Raft};
 
 pub fn bench_raft(c: &mut Criterion) {
@@ -24,7 +27,14 @@ fn new_storage(voters: usize, learners: usize) -> MemStorage {
 fn quick_raft(storage: MemStorage, logger: &slog::Logger) -> Raft<MemStorage> {
     let id = 1;
     let config = Config::new(id);
-    Raft::new(&config, storage, logger).unwrap()
+    Raft::new(
+        &config,
+        storage,
+        Arc::new(Slogger {
+            slog: logger.clone(),
+        }),
+    )
+    .unwrap()
 }
 
 pub fn bench_raft_new(c: &mut Criterion) {

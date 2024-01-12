@@ -23,10 +23,12 @@ provide a [`Storage`] component, and a [`Config`] to the [`RawNode::new`] functi
 
 ```rust
 use jopemachine_raft::{
+    logger::Slogger,
     Config,
     storage::MemStorage,
     raw_node::RawNode,
 };
+use std::sync::Arc;
 use slog::{Drain, o};
 
 // Select some defaults, then change what we need.
@@ -36,13 +38,14 @@ let config = Config {
 };
 // Initialize logger.
 let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
+let logger = Arc::new(Slogger { slog: logger.clone() });
 // ... Make any configuration changes.
 // After, make sure it's valid!
 config.validate().unwrap();
 // We'll use the built-in `MemStorage`, but you will likely want your own.
 // Finally, create our Raft node!
 let storage = MemStorage::new_with_conf_state((vec![1], vec![]));
-let mut node = RawNode::new(&config, storage, &logger).unwrap();
+let mut node = RawNode::new(&config, storage, logger).unwrap();
 ```
 
 ## Ticking the Raft node
@@ -53,11 +56,13 @@ channel `recv_timeout` to drive the Raft node at least every 100ms, calling
 
 ```rust
 # use slog::{Drain, o};
-# use raft::{Config, storage::MemStorage, raw_node::RawNode};
+# use std::sync::Arc;
+# use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode};
 # let config = Config { id: 1, ..Default::default() };
 # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
 # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-# let mut node = RawNode::new(&config, store, &logger).unwrap();
+# let logger = Arc::new(Slogger { slog: logger.clone() });
+# let mut node = RawNode::new(&config, store, logger).unwrap();
 # node.raft.become_candidate();
 # node.raft.become_leader();
 use std::{sync::mpsc::{channel, RecvTimeoutError}, time::{Instant, Duration}};
@@ -113,8 +118,9 @@ You can call the `step` function when you receive the Raft messages from other n
 Here is a simple example to use `propose` and `step`:
 
 ```rust
-# use raft::{Config, storage::MemStorage, raw_node::RawNode, eraftpb::Message};
+# use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode, eraftpb::Message};
 # use std::{
+#     sync::Arc,
 #     sync::mpsc::{channel, RecvTimeoutError},
 #     time::{Instant, Duration},
 #     collections::HashMap
@@ -124,7 +130,8 @@ Here is a simple example to use `propose` and `step`:
 # let config = Config { id: 1, ..Default::default() };
 # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
 # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-# let mut node = RawNode::new(&config, store, &logger).unwrap();
+# let logger = Arc::new(Slogger { slog: logger.clone() });
+# let mut node = RawNode::new(&config, store, logger).unwrap();
 # node.raft.become_candidate();
 # node.raft.become_leader();
 #
@@ -181,13 +188,15 @@ state:
 
 ```rust
 # use slog::{Drain, o};
-# use raft::{Config, storage::MemStorage, raw_node::RawNode};
+# use std::sync::Arc;
+# use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode};
 #
 # let config = Config { id: 1, ..Default::default() };
 # config.validate().unwrap();
 # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
 # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-# let mut node = RawNode::new(&config, store, &logger).unwrap();
+# let logger = Arc::new(Slogger { slog: logger.clone() });
+# let mut node = RawNode::new(&config, store, logger).unwrap();
 #
 if !node.has_ready() {
     return;
@@ -205,13 +214,15 @@ other nodes:
 
     ```rust
     # use slog::{Drain, o};
-    # use raft::{Config, storage::MemStorage, raw_node::RawNode, StateRole};
+    # use std::sync::Arc;
+    # use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode, StateRole};
     #
     # let config = Config { id: 1, ..Default::default() };
     # config.validate().unwrap();
     # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
     # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-    # let mut node = RawNode::new(&config, store, &logger).unwrap();
+    # let logger = Arc::new(Slogger { slog: logger.clone() });
+    # let mut node = RawNode::new(&config, store, logger).unwrap();
     #
     # if !node.has_ready() {
     #   return;
@@ -230,13 +241,15 @@ a Raft snapshot from the leader and we must apply the snapshot:
 
     ```rust
     # use slog::{Drain, o};
-    # use raft::{Config, storage::MemStorage, raw_node::RawNode};
+    # use std::sync::Arc;
+    # use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode};
     #
     # let config = Config { id: 1, ..Default::default() };
     # config.validate().unwrap();
     # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
     # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-    # let mut node = RawNode::new(&config, store, &logger).unwrap();
+    # let logger = Arc::new(Slogger { slog: logger.clone() });
+    # let mut node = RawNode::new(&config, store, logger).unwrap();
     #
     # if !node.has_ready() {
     #   return;
@@ -259,26 +272,28 @@ need to update the applied index and resume `apply` later:
 
     ```rust
     # use slog::{Drain, o};
-    # use raft::{Config, storage::MemStorage, raw_node::RawNode, eraftpb::EntryType};
+    # use std::sync::Arc;
+    # use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode, eraftpb::EntryType};
     #
     # let config = Config { id: 1, ..Default::default() };
     # config.validate().unwrap();
     # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
     # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-    # let mut node = RawNode::new(&config, store, &logger).unwrap();
+    # let logger = Arc::new(Slogger { slog: logger.clone() });
+    # let mut node = RawNode::new(&config, store, logger).unwrap();
     #
     # if !node.has_ready() {
     #   return;
     # }
     # let mut ready = node.ready();
     #
-    # fn handle_conf_change(e:  raft::eraftpb::Entry) {
+    # fn handle_conf_change(e: jopemachine_raft::eraftpb::Entry) {
     # }
     #
-    # fn handle_conf_change_v2(e:  raft::eraftpb::Entry) {
+    # fn handle_conf_change_v2(e: jopemachine_raft::eraftpb::Entry) {
     # }
     #
-    # fn handle_normal(e:  raft::eraftpb::Entry) {
+    # fn handle_normal(e: jopemachine_raft::eraftpb::Entry) {
     # }
     #
     let mut _last_apply_index = 0;
@@ -314,13 +329,15 @@ entries but have not been committed yet, we must append the entries to the Raft 
 
     ```rust
     # use slog::{Drain, o};
-    # use raft::{Config, storage::MemStorage, raw_node::RawNode};
+    # use std::sync::Arc;
+    # use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode};
     #
     # let config = Config { id: 1, ..Default::default() };
     # config.validate().unwrap();
     # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
     # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-    # let mut node = RawNode::new(&config, store, &logger).unwrap();
+    # let logger = Arc::new(Slogger { slog: logger.clone() });
+    # let mut node = RawNode::new(&config, store, logger).unwrap();
     #
     # if !node.has_ready() {
     #   return;
@@ -340,13 +357,15 @@ We must persist the changed `HardState`:
 
     ```rust
     # use slog::{Drain, o};
-    # use raft::{Config, storage::MemStorage, raw_node::RawNode};
+    # use std::sync::Arc;
+    # use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode};
     #
     # let config = Config { id: 1, ..Default::default() };
     # config.validate().unwrap();
     # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
     # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-    # let mut node = RawNode::new(&config, store, &logger).unwrap();
+    # let logger = Arc::new(Slogger { slog: logger.clone() });
+    # let mut node = RawNode::new(&config, store, logger).unwrap();
     #
     # if !node.has_ready() {
     #   return;
@@ -364,13 +383,15 @@ other nodes after persisting hardstate, entries and snapshot:
 
     ```rust
     # use slog::{Drain, o};
-    # use raft::{Config, storage::MemStorage, raw_node::RawNode, StateRole};
+    # use std::sync::Arc;
+    # use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode, StateRole};
     #
     # let config = Config { id: 1, ..Default::default() };
     # config.validate().unwrap();
     # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
     # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-    # let mut node = RawNode::new(&config, store, &logger).unwrap();
+    # let logger = Arc::new(Slogger { slog: logger.clone() });
+    # let mut node = RawNode::new(&config, store, logger).unwrap();
     #
     # if !node.has_ready() {
     #   return;
@@ -390,14 +411,16 @@ to advance the applied index inside.
 
     ```rust
     # use slog::{Drain, o};
-    # use raft::{Config, storage::MemStorage, raw_node::RawNode};
-    # use raft::eraftpb::{EntryType, Entry, Message};
+    # use std::sync::Arc;
+    # use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode};
+    # use jopemachine_raft::eraftpb::{EntryType, Entry, Message};
     #
     # let config = Config { id: 1, ..Default::default() };
     # config.validate().unwrap();
     # let store = MemStorage::new_with_conf_state((vec![1], vec![]));
     # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-    # let mut node = RawNode::new(&config, store, &logger).unwrap();
+    # let logger = Arc::new(Slogger { slog: logger.clone() });
+    # let mut node = RawNode::new(&config, store, logger).unwrap();
     #
     # if !node.has_ready() {
     #   return;
@@ -447,14 +470,16 @@ the following:
 
 For example to promote a learner 4 and demote an existing voter 3:
 ```no_run
-# use raft::{Config, storage::MemStorage, raw_node::RawNode, eraftpb::*};
+# use std::sync::Arc;
+# use jopemachine_raft::{logger::Slogger, Config, storage::MemStorage, raw_node::RawNode, eraftpb::*};
 # use protobuf::Message as PbMessage;
 # use slog::{Drain, o};
 #
 # let mut config = Config { id: 1, ..Default::default() };
 # let store = MemStorage::new_with_conf_state((vec![1, 2], vec![]));
 # let logger = slog::Logger::root(slog_stdlog::StdLog.fuse(), o!());
-# let mut node = RawNode::new(&mut config, store, &logger).unwrap();
+# let logger = Arc::new(Slogger { slog: logger.clone() });
+# let mut node = RawNode::new(&mut config, store, logger).unwrap();
 let steps = vec![
     raft_proto::new_conf_change_single(4, ConfChangeType::AddNode),
     raft_proto::new_conf_change_single(3, ConfChangeType::RemoveNode),
@@ -508,6 +533,7 @@ mod errors;
 #[allow(missing_docs)]
 pub mod formatter;
 mod log_unstable;
+pub mod logger;
 mod quorum;
 mod raft;
 mod raft_log;
@@ -547,7 +573,7 @@ pub mod prelude {
     //! library's prelude you'll have to do so manually:
     //!
     //! ```
-    //! use raft::prelude::*;
+    //! use jopemachine_raft::prelude::*;
     //! ```
     //!
     //! The prelude may grow over time as additional items see ubiquitous use.

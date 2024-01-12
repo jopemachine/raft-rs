@@ -20,19 +20,18 @@
 //! nodes but not the raft consensus itself. Generally, you'll interact with the
 //! RawNode first and use it to access the inner workings of the consensus protocol.
 
+use std::sync::Arc;
 use std::{collections::VecDeque, mem};
 
 use protobuf::Message as PbMessage;
 use raft_proto::ConfChangeI;
-use slog::Logger;
+use crate::logger::Logger;
 
 use crate::eraftpb::{ConfState, Entry, EntryType, HardState, Message, MessageType, Snapshot};
 use crate::errors::{Error, Result};
 use crate::read_only::ReadState;
 use crate::{config::Config, StateRole};
 use crate::{storage::GetEntriesFor, GetEntriesContext, Raft, SoftState, Status, Storage};
-
-use slog::info;
 
 /// Represents a Peer node in the cluster.
 #[derive(Debug, Default)]
@@ -299,7 +298,7 @@ pub struct RawNode<T: Storage> {
 impl<T: Storage> RawNode<T> {
     #[allow(clippy::new_ret_no_self)]
     /// Create a new RawNode given some [`Config`].
-    pub fn new(config: &Config, store: T, logger: &Logger) -> Result<Self> {
+    pub fn new(config: &Config, store: T, logger: Arc<dyn Logger>) -> Result<Self> {
         assert_ne!(config.id, 0, "config.id must not be zero");
         let r = Raft::new(config, store, logger)?;
         let mut rn = RawNode {
@@ -312,11 +311,9 @@ impl<T: Storage> RawNode<T> {
         };
         rn.prev_hs = rn.raft.hard_state();
         rn.prev_ss = rn.raft.soft_state();
-        info!(
-            rn.raft.logger,
-            "RawNode created with id {id}.",
-            id = rn.raft.id
-        );
+        rn.raft
+            .logger
+            .info(format!("RawNode created with id {}.", rn.raft.id).as_str());
         Ok(rn)
     }
 
@@ -326,7 +323,15 @@ impl<T: Storage> RawNode<T> {
     #[cfg(feature = "default-logger")]
     #[allow(clippy::new_ret_no_self)]
     pub fn with_default_logger(c: &Config, store: T) -> Result<Self> {
-        Self::new(c, store, &crate::default_logger())
+        use crate::logger::Slogger;
+
+        Self::new(
+            c,
+            store,
+            Arc::new(Slogger {
+                slog: crate::default_logger(),
+            }),
+        )
     }
 
     /// Sets priority of node.
@@ -671,7 +676,9 @@ impl<T: Storage> RawNode<T> {
         self.on_persist_ready(self.max_number);
         let mut light_rd = self.gen_light_ready();
         if self.raft.state != StateRole::Leader && !light_rd.messages().is_empty() {
-            fatal!(self.raft.logger, "not leader but has new msg after advance");
+            self.raft
+                .logger
+                .fatal("not leader but has new msg after advance");
         }
         // Set commit index if it's updated
         let hard_state = self.raft.hard_state();
