@@ -5,8 +5,10 @@
 #![allow(clippy::field_reassign_with_default)]
 
 use criterion::{BatchSize, Bencher, BenchmarkId, Criterion, Throughput};
-use jopemachine_raft::eraftpb::{ConfState, Entry, Message, Snapshot, SnapshotMetadata};
-use jopemachine_raft::{storage::MemStorage, Config, RawNode};
+use raft::eraftpb::{ConfState, Entry, Message, Snapshot, SnapshotMetadata};
+use raft::logger::Slogger;
+use raft::{storage::MemStorage, Config, RawNode};
+use std::sync::Arc;
 use std::time::Duration;
 
 pub fn bench_raw_node(c: &mut Criterion) {
@@ -20,12 +22,19 @@ fn quick_raw_node(logger: &slog::Logger) -> RawNode<MemStorage> {
     let conf_state = ConfState::from((vec![1], vec![]));
     let storage = MemStorage::new_with_conf_state(conf_state);
     let config = Config::new(id);
-    RawNode::new(&config, storage, logger).unwrap()
+    RawNode::new(
+        &config,
+        storage,
+        Arc::new(Slogger {
+            slog: logger.clone(),
+        }),
+    )
+    .unwrap()
 }
 
 pub fn bench_raw_node_new(c: &mut Criterion) {
     let bench = |b: &mut Bencher| {
-        let logger = jopemachine_raft::default_logger();
+        let logger = raft::default_logger();
         b.iter(|| quick_raw_node(&logger));
     };
 
@@ -64,7 +73,7 @@ pub fn bench_raw_node_leader_propose(c: &mut Criterion) {
                 BenchmarkId::from_parameter(size),
                 &size,
                 |b: &mut Bencher, size| {
-                    let logger = jopemachine_raft::default_logger();
+                    let logger = raft::default_logger();
                     let mut node = quick_raw_node(&logger);
                     node.raft.become_candidate();
                     node.raft.become_leader();
@@ -79,7 +88,7 @@ pub fn bench_raw_node_leader_propose(c: &mut Criterion) {
 }
 
 pub fn bench_raw_node_new_ready(c: &mut Criterion) {
-    let logger = jopemachine_raft::default_logger();
+    let logger = raft::default_logger();
     let mut group = c.benchmark_group("RawNode::ready");
     group
         // TODO: The proper measurement time could be affected by the system and machine.

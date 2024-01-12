@@ -14,11 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::Arc;
+
 use harness::Network;
+use protobuf::{Message as PbMessage, ProtobufEnum as _};
 use raft::eraftpb::*;
+use raft::logger::Slogger;
 use raft::storage::{GetEntriesContext, MemStorage};
 use raft::*;
-use protobuf::{Message as PbMessage, ProtobufEnum as _};
 use raft_proto::*;
 use slog::Logger;
 
@@ -84,7 +87,14 @@ fn new_raw_node_with_config(
             .apply_snapshot(new_snapshot(1, 1, peers))
             .unwrap();
     }
-    RawNode::new(config, storage, logger).unwrap()
+    RawNode::new(
+        config,
+        storage,
+        Arc::new(Slogger {
+            slog: logger.clone(),
+        }),
+    )
+    .unwrap()
 }
 
 /// Ensures that RawNode::step ignore local message.
@@ -723,7 +733,12 @@ fn test_raw_node_restart_from_snapshot() {
         store.wl().apply_snapshot(snap).unwrap();
         store.wl().append(&entries).unwrap();
         store.wl().set_hardstate(hard_state(1, 3, 0));
-        RawNode::new(&new_test_config(1, 10, 1), store, &l).unwrap()
+        RawNode::new(
+            &new_test_config(1, 10, 1),
+            store,
+            Arc::new(Slogger { slog: l.clone() }),
+        )
+        .unwrap()
     };
 
     let rd = raw_node.ready();
@@ -1858,7 +1873,7 @@ fn test_committed_entries_pagination_after_restart() {
         .unwrap();
 
     let config = new_test_config(1, 10, 1);
-    let mut raw_node = RawNode::new(&config, s, &l).unwrap();
+    let mut raw_node = RawNode::new(&config, s, Arc::new(Slogger { slog: l.clone() })).unwrap();
 
     // `IgnoreSizeHintMemStorage` will ignore `max_committed_size_per_ready` but
     // `RaftLog::slice won't.`

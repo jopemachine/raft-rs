@@ -15,10 +15,10 @@
 // limitations under the License.
 
 use std::collections::VecDeque;
-
-use slog::Logger;
+use std::sync::Arc;
 
 use crate::eraftpb::Message;
+use crate::logger::Logger;
 use crate::{HashMap, HashSet};
 
 /// Determines the relative safety of and consistency of read only requests.
@@ -106,11 +106,11 @@ impl ReadOnly {
     /// Advances the read only request queue kept by the ReadOnly struct.
     /// It dequeues the requests until it finds the read only request that has
     /// the same context as the given `ctx`.
-    pub fn advance(&mut self, ctx: &[u8], logger: &Logger) -> Vec<ReadIndexStatus> {
+    pub fn advance(&mut self, ctx: &[u8], logger: Arc<dyn Logger>) -> Vec<ReadIndexStatus> {
         let mut rss = vec![];
         if let Some(i) = self.read_index_queue.iter().position(|x| {
             if !self.pending_read_index.contains_key(x) {
-                fatal!(logger, "cannot find correspond read state from pending map");
+                logger.fatal("cannot find correspond read state from pending map");
             }
             *x == ctx
         }) {

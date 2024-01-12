@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use jopemachine_raft::{eraftpb::Message, storage::MemStorage, Raft, Result};
+use raft::{eraftpb::Message, storage::MemStorage, Raft, Result};
 use std::ops::{Deref, DerefMut};
 
 /// A simulated Raft facade for testing.

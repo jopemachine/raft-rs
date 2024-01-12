@@ -16,9 +16,9 @@
 
 use crate::test_util::*;
 use harness::*;
-use jopemachine_raft::eraftpb::*;
-use jopemachine_raft::storage::MemStorage;
-use jopemachine_raft::*;
+use raft::eraftpb::*;
+use raft::storage::MemStorage;
+use raft::*;
 use slog::Logger;
 
 pub fn commit_noop_entry(r: &mut Interface, s: &MemStorage) {

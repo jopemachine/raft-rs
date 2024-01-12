@@ -2,7 +2,7 @@
 
 use crate::test_util::*;
 use fail;
-use jopemachine_raft::{default_logger, eraftpb::MessageType};
+use raft::{default_logger, eraftpb::MessageType};
 use std::sync::*;
 
 // test_reject_stale_term_message tests that if a server receives a request with

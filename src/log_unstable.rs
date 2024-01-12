@@ -16,9 +16,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::sync::Arc;
+
 use crate::eraftpb::{Entry, Snapshot};
+use crate::logger::Logger;
 use crate::util::entry_approximate_size;
-use slog::Logger;
 
 /// The `unstable.entries[i]` has raft log position `i+unstable.offset`.
 /// Note that `unstable.offset` may be less than the highest log
@@ -39,12 +41,12 @@ pub struct Unstable {
     pub offset: u64,
 
     /// The tag to use when logging.
-    pub logger: Logger,
+    pub logger: Arc<dyn Logger>,
 }
 
 impl Unstable {
     /// Creates a new log of unstable entries.
-    pub fn new(offset: u64, logger: Logger) -> Unstable {
+    pub fn new(offset: u64, logger: Arc<dyn Logger>) -> Unstable {
         Unstable {
             offset,
             snapshot: None,
@@ -97,24 +99,24 @@ impl Unstable {
         assert!(self.snapshot.is_none());
         if let Some(entry) = self.entries.last() {
             if entry.get_index() != index || entry.get_term() != term {
-                fatal!(
-                    self.logger,
+                self.logger.fatal(format!(
                     "the last one of unstable.slice has different index {} and term {}, expect {} {}",
                     entry.get_index(),
                     entry.get_term(),
                     index,
                     term
-                );
+                ).as_str());
             }
             self.offset = entry.get_index() + 1;
             self.entries.clear();
             self.entries_size = 0;
         } else {
-            fatal!(
-                self.logger,
-                "unstable.slice is empty, expect its last one's index and term are {} and {}",
-                index,
-                term
+            self.logger.fatal(
+                format!(
+                    "unstable.slice is empty, expect its last one's index and term are {} and {}",
+                    index, term
+                )
+                .as_str(),
             );
         }
     }
@@ -123,19 +125,23 @@ impl Unstable {
     pub fn stable_snap(&mut self, index: u64) {
         if let Some(snap) = &self.snapshot {
             if snap.get_metadata().index != index {
-                fatal!(
-                    self.logger,
-                    "unstable.snap has different index {}, expect {}",
-                    snap.get_metadata().index,
-                    index
+                self.logger.fatal(
+                    format!(
+                        "unstable.snap has different index {}, expect {}",
+                        snap.get_metadata().index,
+                        index
+                    )
+                    .as_str(),
                 );
             }
             self.snapshot = None;
         } else {
-            fatal!(
-                self.logger,
-                "unstable.snap is none, expect a snapshot with index {}",
-                index
+            self.logger.fatal(
+                format!(
+                    "unstable.snap is none, expect a snapshot with index {}",
+                    index
+                )
+                .as_str(),
             );
         }
     }
@@ -194,26 +200,29 @@ impl Unstable {
     /// entries themselves.
     pub fn must_check_outofbounds(&self, lo: u64, hi: u64) {
         if lo > hi {
-            fatal!(self.logger, "invalid unstable.slice {} > {}", lo, hi)
+            self.logger
+                .fatal(format!("invalid unstable.slice {} > {}", lo, hi).as_str());
         }
         let upper = self.offset + self.entries.len() as u64;
         if lo < self.offset || hi > upper {
-            fatal!(
-                self.logger,
-                "unstable.slice[{}, {}] out of bound[{}, {}]",
-                lo,
-                hi,
-                self.offset,
-                upper
-            )
+            self.logger.fatal(
+                format!(
+                    "unstable.slice[{}, {}] out of bound[{}, {}]",
+                    lo, hi, self.offset, upper
+                )
+                .as_str(),
+            );
         }
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use crate::eraftpb::{Entry, Snapshot, SnapshotMetadata};
     use crate::log_unstable::Unstable;
+    use crate::logger::Slogger;
     use crate::util::entry_approximate_size;
 
     fn new_entry(index: u64, term: u64) -> Entry {
@@ -256,7 +265,9 @@ mod test {
                 entries_size,
                 offset,
                 snapshot,
-                logger: crate::default_logger(),
+                logger: Arc::new(Slogger {
+                    slog: crate::default_logger(),
+                }),
             };
             let index = u.maybe_first_index();
             match index {
@@ -290,7 +301,9 @@ mod test {
                 entries_size,
                 offset,
                 snapshot,
-                logger: crate::default_logger(),
+                logger: Arc::new(Slogger {
+                    slog: crate::default_logger(),
+                }),
             };
             let index = u.maybe_last_index();
             match index {
@@ -358,7 +371,9 @@ mod test {
                 entries_size,
                 offset,
                 snapshot,
-                logger: crate::default_logger(),
+                logger: Arc::new(Slogger {
+                    slog: crate::default_logger(),
+                }),
             };
             let term = u.maybe_term(index);
             match term {
@@ -375,7 +390,9 @@ mod test {
             entries_size: entry_approximate_size(&new_entry(5, 1)),
             offset: 5,
             snapshot: Some(new_snapshot(4, 1)),
-            logger: crate::default_logger(),
+            logger: Arc::new(Slogger {
+                slog: crate::default_logger(),
+            }),
         };
 
         let s = new_snapshot(6, 2);
@@ -396,7 +413,9 @@ mod test {
             entries_size,
             offset: 5,
             snapshot: Some(new_snapshot(4, 1)),
-            logger: crate::default_logger(),
+            logger: Arc::new(Slogger {
+                slog: crate::default_logger(),
+            }),
         };
         assert_eq!(ents, u.entries);
         u.stable_snap(4);
@@ -467,7 +486,9 @@ mod test {
                 entries_size,
                 offset,
                 snapshot,
-                logger: crate::default_logger(),
+                logger: Arc::new(Slogger {
+                    slog: crate::default_logger(),
+                }),
             };
             u.truncate_and_append(&to_append);
             assert_eq!(u.offset, woffset);

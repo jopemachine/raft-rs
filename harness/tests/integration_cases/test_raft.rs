@@ -17,12 +17,14 @@
 use std::cmp;
 use std::collections::HashMap;
 use std::panic::{self, AssertUnwindSafe};
+use std::sync::Arc;
 
 use harness::*;
+use protobuf::Message as PbMessage;
 use raft::eraftpb::*;
+use raft::logger::Slogger;
 use raft::storage::{GetEntriesContext, MemStorage};
 use raft::*;
-use protobuf::Message as PbMessage;
 use raft_proto::*;
 use slog::Logger;
 
@@ -4407,7 +4409,13 @@ fn test_prevote_with_check_quorum() {
 fn test_new_raft_with_bad_config_errors() {
     let invalid_config = new_test_config(INVALID_ID, 1, 1);
     let s = MemStorage::new_with_conf_state((vec![1, 2], vec![]));
-    let raft = Raft::new(&invalid_config, s, &default_logger());
+    let raft = Raft::new(
+        &invalid_config,
+        s,
+        Arc::new(Slogger {
+            slog: default_logger(),
+        }),
+    );
     assert!(raft.is_err())
 }
 
@@ -5431,10 +5439,7 @@ fn test_uncommitted_entries_size_limit() {
 
     // then next proposal should be dropped
     let result = nt.dispatch([msg]);
-    assert_eq!(
-        result.unwrap_err(),
-        jopemachine_raft::Error::ProposalDropped
-    );
+    assert_eq!(result.unwrap_err(), raft::Error::ProposalDropped);
 
     // but entry with empty size should be accepted
     let entry = Entry::default();
@@ -5501,10 +5506,7 @@ fn test_uncommitted_entry_after_leader_election() {
     // uncommitted log size should be 0 on node2,
     // because we set uncommitted size to 0 rather than re-computing it,
     // which means max_uncommitted_size is a soft limit
-    assert_eq!(
-        nt.peers.get_mut(&2).unwrap().state,
-        jopemachine_raft::StateRole::Leader
-    );
+    assert_eq!(nt.peers.get_mut(&2).unwrap().state, raft::StateRole::Leader);
     assert_eq!(nt.peers.get_mut(&2).unwrap().uncommitted_size(), 0);
 }
 
@@ -5540,10 +5542,7 @@ fn test_uncommitted_state_advance_ready_from_last_term() {
     // now node2 has 2 committed entries
     // make node2 leader
     nt.send(vec![new_message(2, 2, MessageType::MsgHup, 0)]);
-    assert_eq!(
-        nt.peers.get_mut(&2).unwrap().state,
-        jopemachine_raft::StateRole::Leader
-    );
+    assert_eq!(nt.peers.get_mut(&2).unwrap().state, raft::StateRole::Leader);
 
     nt.isolate(2);
     // create one uncommitted entry

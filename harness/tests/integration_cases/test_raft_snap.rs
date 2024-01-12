@@ -16,8 +16,8 @@
 
 use crate::test_util::*;
 use harness::Network;
-use jopemachine_raft::eraftpb::*;
-use jopemachine_raft::{default_logger, Error, ProgressState, INVALID_INDEX};
+use raft::eraftpb::*;
+use raft::{default_logger, Error, ProgressState, INVALID_INDEX};
 
 fn testing_snap() -> Snapshot {
     new_snapshot(11, 11, vec![1, 2])

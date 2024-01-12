@@ -15,7 +15,7 @@
 // limitations under the License.
 
 use crate::test_util::*;
-use jopemachine_raft::{default_logger, eraftpb::*};
+use raft::{default_logger, eraftpb::*};
 
 // test_msg_app_flow_control_full ensures:
 // 1. msgApp can fill the sending window until full

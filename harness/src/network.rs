@@ -14,10 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
-use jopemachine_raft::{
+use raft::{
     eraftpb::{ConfState, Message, MessageType},
+    logger::Slogger,
     storage::MemStorage,
     Config, Raft, Result, NO_LIMIT,
 };
@@ -92,7 +93,9 @@ impl Network {
                     nstorage.insert(*id, store.clone());
                     let mut config = config.clone();
                     config.id = *id;
-                    let r = Raft::new(&config, store, l).unwrap().into();
+                    let r = Raft::new(&config, store, Arc::new(Slogger { slog: l.clone() }))
+                        .unwrap()
+                        .into();
                     npeers.insert(*id, r);
                 }
                 Some(r) => {

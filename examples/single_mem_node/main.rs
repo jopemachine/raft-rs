@@ -1,8 +1,10 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
+use raft::logger::Slogger;
 use slog::{Drain, Logger};
 use std::collections::HashMap;
 use std::sync::mpsc::{self, RecvTimeoutError};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -63,7 +65,14 @@ fn main() {
     };
 
     // Create the Raft node.
-    let mut r = RawNode::new(&cfg, storage, &logger).unwrap();
+    let mut r = RawNode::new(
+        &cfg,
+        storage,
+        Arc::new(Slogger {
+            slog: logger.clone(),
+        }),
+    )
+    .unwrap();
 
     let (sender, receiver) = mpsc::channel();
 

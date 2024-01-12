@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use lazy_static::lazy_static;
 use raft_proto::prelude::{ConfChange, ConfChangeV2, Message, Snapshot};
 use std::sync::{Arc, RwLock};
@@ -27,34 +29,27 @@ impl From<bytes::Bytes> for Bytes {
     }
 }
 
-/// Sample Docs
 pub trait CustomFormatter {
-    /// Sample Docs
     fn format_entry_context(&self, v: &Bytes) -> String {
         format!("{:?}", v)
     }
 
-    /// Sample Docs
     fn format_entry_data(&self, v: &Bytes) -> String {
         format!("{:?}", v)
     }
 
-    /// Sample Docs
     fn format_confchangev2_context(&self, v: &Bytes) -> String {
         format!("{:?}", v)
     }
 
-    /// Sample Docs
     fn format_confchange_context(&self, v: &Bytes) -> String {
         format!("{:?}", v)
     }
 
-    /// Sample Docs
     fn format_message_context(&self, v: &Bytes) -> String {
         format!("{:?}", v)
     }
 
-    /// Sample Docs
     fn format_snapshot_data(&self, v: &Bytes) -> String {
         format!("{:?}", v)
     }
@@ -63,7 +58,6 @@ pub trait CustomFormatter {
 struct DefaultFormatter;
 impl CustomFormatter for DefaultFormatter {}
 
-/// Sample Docs
 pub fn format_entry(entry: &Entry) -> String {
     let formatter = CUSTOM_FORMATTER.read().unwrap();
 
@@ -78,7 +72,6 @@ pub fn format_entry(entry: &Entry) -> String {
     )
 }
 
-/// Sample Docs
 pub fn format_confchange(cc: &ConfChange) -> String {
     let formatter = CUSTOM_FORMATTER.read().unwrap();
 
@@ -91,7 +84,6 @@ pub fn format_confchange(cc: &ConfChange) -> String {
     )
 }
 
-/// Sample Docs
 pub fn format_confchangev2(cc: &ConfChangeV2) -> String {
     let formatter = CUSTOM_FORMATTER.read().unwrap();
 
@@ -103,7 +95,6 @@ pub fn format_confchangev2(cc: &ConfChangeV2) -> String {
     )
 }
 
-/// Sample Docs
 pub fn format_snapshot(snapshot: &Snapshot) -> String {
     let formatter = CUSTOM_FORMATTER.read().unwrap();
 
@@ -114,7 +105,6 @@ pub fn format_snapshot(snapshot: &Snapshot) -> String {
     )
 }
 
-/// Sample Docs
 pub fn format_message(msg: &Message) -> String {
     let formatter = CUSTOM_FORMATTER.read().unwrap();
 
@@ -139,7 +129,6 @@ pub fn format_message(msg: &Message) -> String {
     )
 }
 
-/// Sample Docs
 pub fn set_custom_formatter<D: CustomFormatter + 'static + Send + Sync>(formatter: D) {
     let formatter = Arc::new(formatter);
     let mut global_formatter = CUSTOM_FORMATTER.write().unwrap();

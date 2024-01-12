@@ -4,6 +4,7 @@
 // same time. And reassignment can be optimized by compiler.
 #![allow(clippy::field_reassign_with_default)]
 
+use raft::logger::Slogger;
 use slog::Drain;
 use std::collections::{HashMap, VecDeque};
 use std::sync::mpsc::{self, Receiver, Sender, SyncSender, TryRecvError};
@@ -11,9 +12,9 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use std::{str, thread};
 
-use jopemachine_raft::storage::MemStorage;
-use jopemachine_raft::{prelude::*, StateRole};
 use protobuf::Message as PbMessage;
+use raft::storage::MemStorage;
+use raft::{prelude::*, StateRole};
 use regex::Regex;
 
 use slog::{error, info, o};
@@ -186,7 +187,8 @@ impl Node {
         s.mut_metadata().mut_conf_state().voters = vec![1];
         let storage = MemStorage::new();
         storage.wl().apply_snapshot(s).unwrap();
-        let raft_group = Some(RawNode::new(&cfg, storage, &logger).unwrap());
+        let raft_group =
+            Some(RawNode::new(&cfg, storage, Arc::new(Slogger { slog: logger })).unwrap());
         Node {
             raft_group,
             my_mailbox,
@@ -217,7 +219,8 @@ impl Node {
         cfg.id = msg.to;
         let logger = logger.new(o!("tag" => format!("peer_{}", msg.to)));
         let storage = MemStorage::new();
-        self.raft_group = Some(RawNode::new(&cfg, storage, &logger).unwrap());
+        self.raft_group =
+            Some(RawNode::new(&cfg, storage, Arc::new(Slogger { slog: logger })).unwrap());
     }
 
     // Step a raft message, initialize the raft if need.
