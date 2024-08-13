@@ -615,7 +615,7 @@ impl<T: Storage> RaftCore<T> {
     fn send(&mut self, mut m: Message, msgs: &mut Vec<Message>) {
         self.logger.debug(
             format!(
-                "Sending from {from} to {to}, msg: {msg}",
+                "<<< Sending from {from} to {to}, msg: {msg}",
                 from = self.id,
                 to = m.to,
                 msg = format_message(&m)
