@@ -250,6 +250,7 @@ pub struct RaftCore<T: Storage> {
 
     /// The logger for the raft structure.
     pub(crate) logger: Arc<dyn Logger>,
+    omit_heartbeat_log: bool,
 
     /// The election priority of this node.
     pub priority: i64,
@@ -367,6 +368,7 @@ impl<T: Storage> Raft<T> {
                     last_log_tail_index: 0,
                 },
                 max_committed_size_per_ready: c.max_committed_size_per_ready,
+                omit_heartbeat_log: c.omit_heartbeat_log,
             },
         };
         confchange::restore(&mut r.prs, r.r.raft_log.last_index(), conf_state)?;
@@ -613,15 +615,19 @@ impl<T: Storage> Raft<T> {
 impl<T: Storage> RaftCore<T> {
     // send persists state to stable storage and then sends to its mailbox.
     fn send(&mut self, mut m: Message, msgs: &mut Vec<Message>) {
-        self.logger.debug(
-            format!(
-                "<<< Sending from {from} to {to}, msg: {msg}",
-                from = self.id,
-                to = m.to,
-                msg = format_message(&m)
-            )
-            .as_str(),
-        );
+        let is_heartbeat_message = m.get_msg_type() == MessageType::MsgHeartbeat
+            || m.get_msg_type() == MessageType::MsgHeartbeatResponse;
+        if !is_heartbeat_message || !self.omit_heartbeat_log {
+            self.logger.debug(
+                format!(
+                    "<<< Sending from {from} to {to}, msg: {msg}",
+                    from = self.id,
+                    to = m.to,
+                    msg = format_message(&m)
+                )
+                    .as_str(),
+            );
+        }
         if m.from == INVALID_ID {
             m.from = self.id;
         }
