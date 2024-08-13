@@ -98,6 +98,10 @@ pub struct Config {
 
     /// Max size for committed entries in a `Ready`.
     pub max_committed_size_per_ready: u64,
+
+    /// Omit logs related to heartbeat or not. If `true`, logs about messages with type
+    /// `MsgHeartbeat` and `MsgHeartbeatResponse` will be omitted regardless of the log level.
+    pub omit_heartbeat_log: bool,
 }
 
 impl Default for Config {
@@ -120,6 +124,7 @@ impl Default for Config {
             priority: 0,
             max_uncommitted_size: NO_LIMIT,
             max_committed_size_per_ready: NO_LIMIT,
+            omit_heartbeat_log: false,
         }
     }
 }
