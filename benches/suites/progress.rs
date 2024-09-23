@@ -1,6 +1,8 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
 use criterion::{Bencher, Criterion};
+use jopemachine_raft as raft;
+
 use raft::Progress;
 
 pub fn bench_progress(c: &mut Criterion) {

@@ -20,7 +20,7 @@ prost-codec = ["raft/prost-codec"]
 
 # Make sure to synchronize updates with Raft.
 [dependencies]
-raft = { path = "..", default-features = false }
+raft = { path = "..", default-features = false, package = "jopemachine-raft" }
 raft-proto = { path = "../proto", default-features = false }
 fail = { version = "0.4", optional = true }
 rand = "0.8"

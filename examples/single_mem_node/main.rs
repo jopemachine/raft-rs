@@ -1,4 +1,5 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
+use jopemachine_raft as raft;
 
 use raft::logger::Slogger;
 use slog::{Drain, Logger};

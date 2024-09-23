@@ -4,6 +4,9 @@ use std::sync::Arc;
 
 use crate::DEFAULT_RAFT_SETS;
 use criterion::Criterion;
+
+use jopemachine_raft as raft;
+
 use raft::eraftpb::ConfState;
 use raft::logger::Slogger;
 use raft::{storage::MemStorage, Config, Raft};

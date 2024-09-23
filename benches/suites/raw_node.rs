@@ -5,6 +5,7 @@
 #![allow(clippy::field_reassign_with_default)]
 
 use criterion::{BatchSize, Bencher, BenchmarkId, Criterion, Throughput};
+use jopemachine_raft as raft;
 use raft::eraftpb::{ConfState, Entry, Message, Snapshot, SnapshotMetadata};
 use raft::logger::Slogger;
 use raft::{storage::MemStorage, Config, RawNode};

@@ -1,6 +1,6 @@
 [package]
-name = "raft"
-version = "0.7.0"
+name = "jopemachine-raft"
+version = "0.7.9"
 authors = ["The TiKV Project Developers"]
 license = "Apache-2.0"
 keywords = ["raft", "distributed-systems", "ha"]
@@ -11,6 +11,9 @@ documentation = "https://docs.rs/raft"
 description = "The rust language implementation of Raft algorithm."
 categories = ["algorithms", "database-implementations"]
 edition = "2021"
+
+[lib]
+doctest = false
 
 [workspace]
 members = ["proto", "harness", "datadriven"]
