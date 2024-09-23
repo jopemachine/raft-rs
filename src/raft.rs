@@ -26,7 +26,6 @@ use crate::formatter::format_message;
 use protobuf::Message as _;
 use raft_proto::ConfChangeI;
 use rand::{self, Rng};
-use slog::Logger;
 
 use crate::logger::{Logger, Slogger};
 
@@ -625,7 +624,7 @@ impl<T: Storage> RaftCore<T> {
                     to = m.to,
                     msg = format_message(&m)
                 )
-                    .as_str(),
+                .as_str(),
             );
         }
         if m.from == INVALID_ID {
@@ -1177,11 +1176,11 @@ impl<T: Storage> Raft<T> {
         self.pending_request_snapshot = pending_request_snapshot;
         self.logger.info(
             format!(
-                "became follower at term {term} from_role {:?}",
-                term = self.term
+                "became follower at term {term} from_role {from_role:?}",
+                term = self.term,
+                from_role = from_role
             )
             .as_str(),
-            from_role,
         );
     }
 
@@ -1375,7 +1374,7 @@ impl<T: Storage> Raft<T> {
                         format!(
                             "[logterm: {log_term}, index: {log_index}, vote: {vote}] ignored vote from {from} \
                             [logterm: {msg_term}, index: {msg_index}]: lease is not expired; term: {term}, \
-                            remaining ticks: {remaining_ticks}, msg type: {msg_type:?}, leader_id: {leader_id?:}",
+                            remaining ticks: {remaining_ticks}, msg type: {msg_type:?}, leader_id: {leader_id:?}",
                             log_term = self.raft_log.last_term(),
                             log_index = self.raft_log.last_index(),
                             vote = self.vote,
@@ -1384,7 +1383,7 @@ impl<T: Storage> Raft<T> {
                             msg_index = m.index,
                             term = self.term,
                             remaining_ticks = self.election_timeout - self.election_elapsed,
-                            msg_type = m.get_msg_type()
+                            msg_type = m.get_msg_type(),
                             leader_id = self.leader_id,
                         ).as_str()
                     );

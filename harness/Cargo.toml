@@ -12,15 +12,15 @@ categories = []
 edition = "2018"
 
 [features]
-default = ["protobuf-codec", "jopemachine-raft/default-logger"]
+default = ["protobuf-codec", "raft/default-logger"]
 # Enable failpoints
 failpoints = ["fail/failpoints"]
-protobuf-codec = ["jopemachine-raft/protobuf-codec"]
-prost-codec = ["jopemachine-raft/prost-codec"]
+protobuf-codec = ["raft/protobuf-codec"]
+prost-codec = ["raft/prost-codec"]
 
 # Make sure to synchronize updates with Raft.
 [dependencies]
-jopemachine-raft = { path = "..", default-features = false }
+raft = { path = "..", default-features = false }
 raft-proto = { path = "../proto", default-features = false }
 fail = { version = "0.4", optional = true }
 rand = "0.8"

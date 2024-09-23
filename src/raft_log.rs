@@ -18,12 +18,10 @@ use std::cmp;
 use std::fmt::{Display, Formatter};
 
 use slog::warn;
-use slog::Logger;
 use slog::{debug, info, trace};
 use std::sync::Arc;
 
 use crate::config::Config;
-use crate::deserializer::format_entry;
 use crate::eraftpb::{Entry, Snapshot};
 use crate::errors::{Error, Result, StorageError};
 use crate::formatter::format_entry;
@@ -88,7 +86,7 @@ impl<T: Storage> Display for RaftLog<T> {
 
 impl<T: Storage> RaftLog<T> {
     /// Creates a new raft log with a given storage and tag.
-    pub fn new(store: T, logger: Logger, cfg: &Config) -> RaftLog<T> {
+    pub fn new(store: T, logger: Arc<dyn Logger>, cfg: &Config) -> RaftLog<T> {
         let first_index = store.first_index().unwrap();
         let last_index = store.last_index().unwrap();
 
@@ -336,13 +334,10 @@ impl<T: Storage> RaftLog<T> {
         // NOTE: here we must use `commmitted` instead of `min(committed, perssited + max_apply_unpersisted_log_limit)`
         // as the uppper bound because the `max_apply_unpersisted_log_limit` can be adjusted dynamically.
         if idx > self.committed || idx < self.applied {
-            fatal!(
-                self.unstable.logger,
+            self.unstable.logger.fatal(&format!(
                 "applied({}) is out of range [prev_applied({}), committed({})]",
-                idx,
-                self.applied,
-                self.committed,
-            )
+                idx, self.applied, self.committed
+            ));
         }
         self.applied_to_unchecked(idx);
     }
@@ -774,13 +769,13 @@ mod test {
         sync::Arc,
     };
 
-    use crate::config::Config;
     use crate::default_logger;
     use crate::eraftpb;
     use crate::errors::{Error, StorageError};
     use crate::raft_log::{self, RaftLog};
     use crate::storage::{GetEntriesContext, MemStorage};
     use crate::NO_LIMIT;
+    use crate::{config::Config, logger::Slogger};
 
     fn new_entry(index: u64, term: u64) -> eraftpb::Entry {
         let mut e = eraftpb::Entry::default();
@@ -866,7 +861,7 @@ mod test {
 
         let previous_ents = vec![new_entry(1, 1), new_entry(2, 2), new_entry(3, 3)];
         let store = MemStorage::new();
-        let mut raft_log = RaftLog::new(store, default_logger(), &Config::default());
+        let mut raft_log = RaftLog::new(store, l, &Config::default());
         raft_log.append(&previous_ents);
         let tests = vec![
             // greater term, ignore lastIndex
@@ -950,7 +945,7 @@ mod test {
                 .append(&[new_entry(i, i)])
                 .expect("append failed");
         }
-        let mut raft_log = RaftLog::new(storage, default_logger(), &Config::default());
+        let mut raft_log = RaftLog::new(storage, l, &Config::default());
         for i in unstable_index..last_index {
             raft_log.append(&[new_entry(i + 1, i + 1)]);
         }
@@ -1000,7 +995,7 @@ mod test {
             .wl()
             .apply_snapshot(new_snapshot(storagesnapi, 1))
             .expect("apply failed.");
-        let mut raft_log = RaftLog::new(store, default_logger(), &Config::default());
+        let mut raft_log = RaftLog::new(store, l, &Config::default());
         raft_log.restore(new_snapshot(unstablesnapi, 1));
         assert_eq!(raft_log.committed, unstablesnapi);
         assert_eq!(raft_log.persisted, storagesnapi);
@@ -1033,10 +1028,10 @@ mod test {
             .wl()
             .apply_snapshot(new_snapshot(offset, 1))
             .expect("apply failed.");
-        let mut raft_log = RaftLog::new(store, default_logger(), &Config::default());
         let l = Arc::new(Slogger {
             slog: default_logger(),
         });
+        let mut raft_log = RaftLog::new(store, l, &Config::default());
         for i in 1..num {
             raft_log.append(&[new_entry(offset + i, i)]);
         }
