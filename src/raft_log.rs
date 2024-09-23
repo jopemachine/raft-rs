@@ -1607,7 +1607,6 @@ mod test {
     ///     return false
     #[test]
     fn test_log_maybe_append() {
-        let l = default_logger();
         let previous_ents = vec![new_entry(1, 1), new_entry(2, 2), new_entry(3, 3)];
         let (last_index, last_term, commit, persist) = (3u64, 3u64, 1u64, 3u64);
 
@@ -1831,7 +1830,6 @@ mod test {
 
     #[test]
     fn test_commit_to() {
-        let l = default_logger();
         let previous_ents = vec![new_entry(1, 1), new_entry(2, 2), new_entry(3, 3)];
         let previous_commit = 2u64;
         let tests = [
@@ -1862,7 +1860,6 @@ mod test {
     // TestCompaction ensures that the number of log entries is correct after compactions.
     #[test]
     fn test_compaction() {
-        let l = default_logger();
         let tests = [
             // out of upper bound
             (1000, vec![1001u64], vec![0usize], true),
