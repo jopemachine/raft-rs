@@ -17,12 +17,14 @@
 use std::collections::VecDeque;
 use std::sync::Arc;
 
+use serde::{Deserialize, Serialize};
+
 use crate::eraftpb::Message;
 use crate::logger::Logger;
 use crate::{HashMap, HashSet};
 
 /// Determines the relative safety of and consistency of read only requests.
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Serialize, Deserialize)]
 pub enum ReadOnlyOption {
     /// Safe guarantees the linearizability of the read only request by
     /// communicating with the quorum. It is the default and suggested option.

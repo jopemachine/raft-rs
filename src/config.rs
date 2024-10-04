@@ -14,6 +14,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use serde::{Deserialize, Serialize};
+
 pub use super::read_only::ReadOnlyOption;
 use super::util::NO_LIMIT;
 use super::{
@@ -22,7 +24,7 @@ use super::{
 };
 
 /// Config contains the parameters to start a raft.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     /// The identity of the local raft. It cannot be 0, and must be unique in the group.
     pub id: u64,
