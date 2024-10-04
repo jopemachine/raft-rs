@@ -25,6 +25,7 @@ use super::{
 
 /// Config contains the parameters to start a raft.
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Config {
     /// The identity of the local raft. It cannot be 0, and must be unique in the group.
     pub id: u64,
