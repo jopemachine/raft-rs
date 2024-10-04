@@ -60,7 +60,7 @@ pub const CAMPAIGN_ELECTION: &[u8] = b"CampaignElection";
 pub const CAMPAIGN_TRANSFER: &[u8] = b"CampaignTransfer";
 
 /// The role of the node.
-#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Hash)]
 pub enum StateRole {
     /// The node is a follower of the leader.
     #[default]
